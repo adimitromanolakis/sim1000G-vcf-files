@@ -1,30 +1,33 @@
 
+"( for i in */*vcf*; do  echo $i `zcat $i |grep -v ^#|wc -l ` ; done ) 2>/dev/null >log2 "
 
 
-f1 = "for i in *; do echo $i `zcat $i|grep -v ^#|wc -l ` ; done > /tmp/t1"
-setwd("pop1")
+a = read.table("log2",as=T)
+a$pop = sub("/.*","",a[,1])
+a$fn = sub(".*/","",a[,1])
 
-system(f1)
 
-v1 = read.table("/tmp/t1",as=T)
-setwd("../..")
 
-setwd("pop2/")
+# l=20:160
+a[ a[,2] %in% l & a$pop == "CEU",]
+a[ a[,2] %in% l & a$pop == "FIN",]
+a[ a[,2] < 5 & a$pop == "FIN",]
+a[1:10,]
 
-system(f1)
 
-v2 = read.table("/tmp/t1",as=T)
+  
+z=reshape2::acast(a,fn~pop,value.var="V2")
+q=apply(z,1,min)
+q
 
-setwd("..")
-m = merge(v1,v2,by=1)
+not_ok = q < 10
+f1 = rownames(z[  not_ok   ,1:5])
+f1
 
-s = which(m[,2] < 15 | m[,3] < 15)
-
+to_remove = paste( sprintf("rm */%s",f1) )
+to_remove
 getwd()
+for(i in to_remove) { print(i); system(i) ; }
 
 
-cmd1 = ( sprintf("pop1/%s",m[s,1]) )
-system(sprintf("rm %s",paste(cmd1, collapse=" ") ))
 
-cmd1 = ( sprintf("pop2/%s",m[s,1]) )
-system(sprintf("rm %s",paste(cmd1, collapse=" ") ))
